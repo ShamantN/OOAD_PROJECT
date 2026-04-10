@@ -1,5 +1,7 @@
 package com.ecommerce.system.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 
 // Entity tells the spring data jpa that this class represents a table in the db
@@ -26,6 +28,7 @@ public class OrderItem {
 
     //@JoinColumn(name,nullable) tells mysql to create a col named order_id
     // to hold the FK linking to the order table
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name="order_id",nullable=false)
     private Order order;
