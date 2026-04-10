@@ -7,6 +7,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.*;;
+
+@Entity
+@Table(name = "refunds") 
 public class Refund {
 
     public Refund(){}
@@ -23,10 +29,11 @@ public class Refund {
 
     @OneToOne
     @JoinColumn(name = "order_id",nullable=false,unique=true)
+    @JsonIgnore
     private Order order;
 
     public void initiateRefund(){
-        this.order.updateStatus(OrderStatus.CANCELLED);
+        this.order.setStatus(OrderStatus.CANCELLED);
         System.out.println("Refund initiated for amount: " + this.amount);
     }
 

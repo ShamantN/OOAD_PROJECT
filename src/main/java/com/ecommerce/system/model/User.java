@@ -4,6 +4,8 @@ package com.ecommerce.system.model;
 
 import jakarta.persistence.*;
 
+@Entity
+@Table(name = "users")
 public class User {
 
     public User(){}

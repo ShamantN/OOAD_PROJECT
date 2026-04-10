@@ -1,14 +1,16 @@
 package com.ecommerce.system.model;
 
-
-
 import jakarta.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
+// CRITICAL: You must tell Spring this is a database table!
+@Entity
+@Table(name = "orders")
 public class Order {
     
+    // Required blank constructor
     public Order(){}
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,45 +20,40 @@ public class Order {
     @Column(nullable=false)
     private OrderStatus status;
 
+    // Renamed to totalAmount to match your OrderService
     @Column(nullable=false)
-    private double amount;
+    private double totalAmount;
 
     @ManyToOne
     @JoinColumn(name="user_id",nullable=false)
     private User user;
 
-    //@OneToMany(mappedBy = "order",cascade = CascadeType.ALL) tells the framework that it is the parent table and 
-    // to use the order variable in OrderItems.java to find the db link
-    // cascade=CascadeType.ALL: if u save an order in the db, it will save all the OrderItems associated with it as well
-    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL)
-    private List<OrderItem> orderItems;
+    // Initialized the list to prevent NullPointerExceptions
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    private List<OrderItem> orderItems = new ArrayList<>();
 
-    public double getTotalAmount(){
-        double total = 0.0;
-        for (OrderItem item : orderItems){
-            total += item.calculateItemTotal();
-        }
-        return total;
-    }
-
+    // --- Business Methods from your Diagram ---
     public void placeOrder(){
         this.status = OrderStatus.CREATED;
     }
+    
     public void cancelOrder(){
         this.status = OrderStatus.CANCELLED;
     }
 
-    public void updateStatus(OrderStatus newStatus){
-        this.status = newStatus;
-    }
+    // --- Standard Getters and Setters ---
+    
+    public int getOrderId() { return orderId; }
 
-    public void setAmount(double amount){this.amount = amount;}
-    public double getAmount(){return amount;}
+    public void setStatus(OrderStatus status){ this.status = status; }
+    public OrderStatus getStatus(){ return status; }
 
-    public void setUser(User user){this.user = user;}
-    public User getUser(){return user;}
+    public void setTotalAmount(double totalAmount){ this.totalAmount = totalAmount; }
+    public double getTotalAmount(){ return totalAmount; }
 
-    public void setItems(List<OrderItem> items){this.orderItems = items;}
-    public List<OrderItem> getItems(){return orderItems;}
+    public void setUser(User user){ this.user = user; }
+    public User getUser(){ return user; }
 
+    public void setItems(List<OrderItem> items){ this.orderItems = items; }
+    public List<OrderItem> getItems(){ return orderItems; }
 }

@@ -1,7 +1,11 @@
 package com.ecommerce.system.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 
+@Entity
+@Table(name = "payments")
 public class Payment {
 
     public Payment(){}
@@ -22,6 +26,7 @@ public class Payment {
 
     @OneToOne
     @JoinColumn(name="order_id",nullable=false,unique=true)
+    @JsonIgnore
     private Order order;
 
     public void processPayment(){

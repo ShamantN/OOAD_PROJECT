@@ -6,7 +6,7 @@ package com.ecommerce.system.model;
 //creates one isntance of each value inside the {}
 public enum PaymentStatus {
     SUCCESS,
-    FALIED,
+    FAILED,
     REFUNDED,
     PENDING
 }

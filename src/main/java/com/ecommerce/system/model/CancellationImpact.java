@@ -1,5 +1,7 @@
 package com.ecommerce.system.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -26,6 +28,7 @@ public class CancellationImpact {
     // Mapping the 1-to-1 relationship to Order
     @OneToOne
     @JoinColumn(name = "order_id", nullable = false, unique = true)
+    @JsonIgnore
     private Order order;
 
     // REQUIRED BLANK CONSTRUCTOR
