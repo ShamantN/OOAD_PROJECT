@@ -1,6 +1,8 @@
 package com.ecommerce.system.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 
 // Entity tells the spring data jpa that this class represents a table in the db
 // Table specifies the exact name of the table in the db
@@ -18,9 +20,11 @@ public class Product {
 
 
     // @Column(nullable=false) is a constraint that translates to NOT NULL in the db
+    @NotBlank(message = "Product name cannot be empty")
     @Column(nullable=false)
     private String name;
 
+    @Positive(message = "Price must be greater than zero")
     @Column(nullable=false)
     private double price;
 
