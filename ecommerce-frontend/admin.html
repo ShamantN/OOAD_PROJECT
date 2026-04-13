@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Commerce Nexus | Admin</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .fulfillment-table { width:100%; border-collapse:collapse; }
+        .fulfillment-table th, .fulfillment-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+        .fulfillment-table th { color: var(--text-muted); font-weight:600; background:#f8fafc; }
+        .fulfillment-table tr:last-child td { border-bottom: none; }
+        .status-badge {
+            display: inline-block;
+            padding: 0.2rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-CREATED    { background:#fef9c3; color:#92400e; }
+        .status-PAID       { background:#dcfce7; color:#166534; }
+        .status-SHIPPED    { background:#dbeafe; color:#1e3a8a; }
+        .status-DELIVERED  { background:#f3f4f6; color:#374151; }
+        .status-CANCELLED  { background:#fee2e2; color:#991b1b; }
+    </style>
+</head>
+<body>
+    <header style="background-color:var(--text-main);">
+        <h1 style="color:white;">Nexus Admin Gateway</h1>
+        <nav>
+            <a href="index.html" style="color:white; margin-right:1rem;">Customer Dashboard</a>
+            <button id="logout-btn" class="btn-outline" style="color:white; border-color:white;">Logout</button>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div id="general-error" class="error-message"></div>
+        <div id="general-success" class="success-message"></div>
+
+        <!-- ─── Financial Impact Dashboard ─── -->
+        <div id="metrics-panel" style="
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d1b1b 100%);
+            border: 1px solid #ef4444;
+            border-radius: var(--border-radius);
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            color: white;
+        ">
+            <h2 style="color:#fca5a5; margin-bottom:1rem;">📊 Financial Impact Dashboard</h2>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1.5rem;">
+                <div style="background:rgba(255,255,255,0.05); border-radius:8px; padding:1rem;">
+                    <p style="color:#94a3b8; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Total Cancelled Orders</p>
+                    <p id="metric-count" style="font-size:2rem; font-weight:700; color:white;">–</p>
+                </div>
+                <div style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:1rem;">
+                    <p style="color:#fca5a5; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Total Revenue Lost in Delivery Stage</p>
+                    <p id="metric-delivery-loss" style="font-size:2rem; font-weight:700; color:#f87171;">–</p>
+                </div>
+                <div style="background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.2); border-radius:8px; padding:1rem;">
+                    <p style="color:#86efac; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Total Cancellation Penalties Collected</p>
+                    <p id="metric-fees" style="font-size:2rem; font-weight:700; color:#4ade80;">–</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── Management Cards ─── -->
+        <div class="grid grid-cols-3" style="margin-bottom:2rem;">
+            <!-- Add Product -->
+            <div class="card">
+                <h2>Add Product</h2>
+                <form id="add-product-form">
+                    <div class="form-group">
+                        <label>Product Name</label>
+                        <input type="text" id="prod-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Price ($)</label>
+                        <input type="number" id="prod-price" step="0.01" required min="0">
+                    </div>
+                    <button type="submit" class="btn-primary" style="width:100%;">Create Product</button>
+                </form>
+            </div>
+
+            <!-- Restock -->
+            <div class="card">
+                <h2>Restock Inventory</h2>
+                <form id="restock-form">
+                    <div class="form-group">
+                        <label>Product ID</label>
+                        <input type="number" id="restock-pid" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Warehouse ID</label>
+                        <input type="number" id="restock-wid" value="1" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Quantity to Add</label>
+                        <input type="number" id="restock-qty" required min="1">
+                    </div>
+                    <button type="submit" class="btn-secondary" style="width:100%;">Restock</button>
+                </form>
+            </div>
+
+            <!-- Quick Ship/Deliver form kept for keyboard-speed workflows -->
+            <div class="card">
+                <h2>Quick Dispatch</h2>
+                <p style="color:var(--text-muted); margin-bottom:1rem; font-size:0.875rem;">Use the table below or manually enter an order ID here.</p>
+                <div class="form-group">
+                    <label>Order ID</label>
+                    <input type="number" id="dispatch-oid" min="1">
+                </div>
+                <div class="grid" style="grid-template-columns:1fr 1fr; gap:0.5rem;">
+                    <button id="ship-btn"    class="btn-primary">Ship</button>
+                    <button id="deliver-btn" class="btn-primary">Deliver</button>
+                </div>
+            </div>
+        </div>
+
+        <hr style="margin:0 0 2rem; border:none; border-top:1px solid var(--border-color);">
+
+        <!-- ─── Order Fulfillment Table ─── -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h2>Order Fulfillment</h2>
+            <button id="refresh-orders-btn" class="btn-outline">↻ Refresh</button>
+        </div>
+        <div class="card" style="padding:0; overflow:hidden;">
+            <table class="fulfillment-table" id="fulfillment-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="fulfillment-body">
+                    <tr><td colspan="6" style="color:var(--text-muted);">Loading orders…</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>

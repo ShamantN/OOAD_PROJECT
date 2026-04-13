@@ -1,0 +1,11 @@
+{
+  "name": "ecommerce-frontend-tests",
+  "version": "1.0.0",
+  "description": "E2E Automated Browser Test Suite for E-Commerce Nexus",
+  "scripts": {
+    "test": "node e2e-automation.js"
+  },
+  "dependencies": {
+    "puppeteer": "^22.0.0"
+  }
+}
