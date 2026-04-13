@@ -1,0 +1,1 @@
+this dir will contain the endpoints and interfaces that connects the frontend to the backend
