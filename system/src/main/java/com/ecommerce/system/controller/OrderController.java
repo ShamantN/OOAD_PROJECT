@@ -1,5 +1,6 @@
 package com.ecommerce.system.controller;
 
+import com.ecommerce.system.dto.CancellationImpactDTO;
 import com.ecommerce.system.model.CancellationImpact;
 import com.ecommerce.system.model.Order;
 import com.ecommerce.system.repository.OrderRepository;
@@ -27,7 +28,7 @@ public class OrderController {
     // --- ENDPOINT 1: Place a New Order ---
     // Web Address: POST http://localhost:8080/api/orders/place
     @PostMapping("/place")
-    public ResponseEntity<?> placeOrder(@RequestBody Order incomingOrder) {
+    public ResponseEntity<?> placeOrder(@jakarta.validation.Valid @RequestBody Order incomingOrder) {
         try {
             // Hand the web data to the Service to process
             Order completedOrder = orderService.processNewOrder(incomingOrder);
@@ -60,23 +61,27 @@ public class OrderController {
     // Web Address: GET http://localhost:8080/api/orders/user/1
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getOrdersByUser(@PathVariable int userId) {
-        List<Order> orders = orderRepository.findByUserUserId(userId);
+        List<com.ecommerce.system.dto.OrderResponseDTO> orders = orderService.getUserOrders(userId);
         return ResponseEntity.ok(orders);
     }
 
-    // --- ENDPOINT 3: Pay for an Order ---
-    // Web Address: POST http://localhost:8080/api/orders/5/pay?amount=99.99
-    // Concept: State Transition Endpoint (Triggers FAILED -> SUCCESS payment state and CREATED -> PAID order state)
-    @PostMapping("/{orderId}/pay")
-    public ResponseEntity<?> payForOrder(@PathVariable int orderId, @RequestParam double amount) {
+    // Note: The pay endpoint has been refactored into PaymentController.
+
+    // --- ENDPOINT 5: View Cancellation Receipt for a Specific Order ---
+    // Web Address: GET http://localhost:8080/api/orders/{orderId}/impact
+    //
+    // Separation of Concerns: This is a GET (read), NOT the POST /cancel (write).
+    // The "action" (canceling) and the "report" (viewing the impact) are deliberately
+    // kept in separate endpoints. A user might cancel at 9am and view their receipt at 3pm.
+    // Conflating them into a single endpoint would break that use-case.
+    @GetMapping("/{orderId}/impact")
+    public ResponseEntity<?> getImpactForOrder(@PathVariable int orderId) {
         try {
-            // Hand the transaction to the PaymentService
-            paymentService.processPayment(orderId, amount);
-            
-            // Return success message
-            return ResponseEntity.ok("Payment successful. Order status updated to PAID.");
+            // Delegate to the service; it fetches and maps the impact to a safe DTO
+            CancellationImpactDTO impact = orderService.getImpactByOrderId(orderId);
+            return ResponseEntity.ok(impact);
         } catch (RuntimeException e) {
-            // Return the bad request if the payment failed (e.g., amount mismatch)
+            // Handles the case where the order was never cancelled (no impact record exists)
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

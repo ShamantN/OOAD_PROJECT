@@ -27,7 +27,10 @@ document.getElementById('logout-btn').addEventListener('click', () => {
     window.location.href = 'login.html';
 });
 
-document.getElementById('refresh-orders-btn').addEventListener('click', loadAllOrders);
+document.getElementById('refresh-orders-btn').addEventListener('click', () => {
+    loadAllOrders();
+    loadMetrics();
+});
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const generalError   = document.getElementById('general-error');

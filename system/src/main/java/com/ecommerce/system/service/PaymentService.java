@@ -34,8 +34,7 @@ public class PaymentService {
     // We encapsulate the validation logic (amount == totalAmount) to ensure invalid state 
     // transitions (e.g., partially paid orders becoming PAID) are impossible.
     @Transactional
-    public void processPayment(int orderId, double paymentAmount) {
-        
+    public void processPayment(int orderId) {
         // 1. Look up the Order
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
@@ -44,17 +43,19 @@ public class PaymentService {
         Payment payment = paymentRepository.findByOrder(order)
                 .orElseThrow(() -> new RuntimeException("No payment record associated with this order."));
 
-        // 3. Validation rule to confirm state transition eligibility
-        if (order.getTotalAmount() != paymentAmount) {
-            // State remains FAILED (or default), exception thrown
-            throw new RuntimeException("Payment amount (" + paymentAmount + ") does not match order total (" + order.getTotalAmount() + "). Transaction failed.");
+        // 3. State Transition Guard: Only CREATED orders can be paid
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new RuntimeException("Cannot process payment. This order is already CANCELLED.");
+        }
+        if (order.getStatus() != OrderStatus.CREATED) {
+            throw new RuntimeException("Payment can only be processed for recently CREATED orders.");
         }
 
         // 4. Update states (State Transition Execution)
         payment.processPayment(); // Internally updates to PaymentStatus.SUCCESS
         order.setStatus(OrderStatus.PAID);
         
-        // 5. Persist changes to Database
+        // 4. Persist changes to Database
         paymentRepository.save(payment);
         orderRepository.save(order);
     }

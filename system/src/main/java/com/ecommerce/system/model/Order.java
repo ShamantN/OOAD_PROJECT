@@ -30,6 +30,7 @@ public class Order {
 
     // Initialized the list to prevent NullPointerExceptions
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @jakarta.validation.Valid
     private List<OrderItem> orderItems = new ArrayList<>();
 
     // --- Business Methods from your Diagram ---
