@@ -1,6 +1,7 @@
 package com.ecommerce.system.controller;
 
 import com.ecommerce.system.dto.AdminMetricsDTO;
+import com.ecommerce.system.dto.CancellationImpactDTO;
 import com.ecommerce.system.model.Order;
 import com.ecommerce.system.model.Product;
 import com.ecommerce.system.model.Role;
@@ -9,6 +10,7 @@ import com.ecommerce.system.repository.CancellationImpactRepository;
 import com.ecommerce.system.repository.OrderRepository;
 import com.ecommerce.system.repository.UserRepository;
 import com.ecommerce.system.service.FulfillmentService;
+import com.ecommerce.system.service.OrderService;
 import com.ecommerce.system.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,16 +33,19 @@ public class AdminController {
     private final FulfillmentService fulfillmentService;
     private final OrderRepository orderRepository;
     private final CancellationImpactRepository cancellationImpactRepository;
+    private final OrderService orderService;
 
     @Autowired
     public AdminController(ProductService productService, UserRepository userRepository,
                            FulfillmentService fulfillmentService, OrderRepository orderRepository,
-                           CancellationImpactRepository cancellationImpactRepository) {
+                           CancellationImpactRepository cancellationImpactRepository,
+                           OrderService orderService) {
         this.productService = productService;
         this.userRepository = userRepository;
         this.fulfillmentService = fulfillmentService;
         this.orderRepository = orderRepository;
         this.cancellationImpactRepository = cancellationImpactRepository;
+        this.orderService = orderService;
     }
 
     // --- OOAD Concept: Authorization / RBAC ---
@@ -79,6 +84,23 @@ public class AdminController {
         long cancelledCount = cancellationImpactRepository.count();
 
         return ResponseEntity.ok(new AdminMetricsDTO(deliveryLoss, feesCollected, cancelledCount));
+    }
+
+    // --- Admin: Full Cancellation Impact Report ---
+    // Web Address: GET http://localhost:8080/api/admin/cancellations/impacts
+    // Header required: Admin-User-Id: <adminUserId>
+    //
+    // WHY A SEPARATE ENDPOINT (not merged with /metrics/cancellations)?
+    // /metrics gives AGGREGATE numbers (totals, counts) — good for a dashboard widget.
+    // /cancellations/impacts gives INDIVIDUAL RECORDS — good for a drill-down table.
+    // Keeping them separate lets the frontend call only what it needs and keeps
+    // each endpoint focused on a single responsibility.
+    @GetMapping("/cancellations/impacts")
+    public ResponseEntity<List<CancellationImpactDTO>> getAllCancellationImpacts(
+            @RequestHeader(value = "Admin-User-Id", required = true) int adminId) {
+        verifyAdminAccess(adminId);
+        List<CancellationImpactDTO> impacts = orderService.getAllCancellationImpacts();
+        return ResponseEntity.ok(impacts);
     }
 
     // --- Admin Order View Endpoint ---

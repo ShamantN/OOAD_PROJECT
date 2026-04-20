@@ -126,6 +126,17 @@ document.getElementById('checkout-btn').addEventListener('click', async () => {
     const cart = getCart();
     if (cart.length === 0) { showError('Your cart is empty!'); return; }
 
+    // Calculate total from cart for the payment confirmation prompt
+    let grandTotal = 0;
+    cart.forEach(item => grandTotal += (item.price * item.quantity));
+    const totalDisplay = grandTotal.toFixed(2);
+
+    // Ask for payment upfront before finalizing checkout
+    const proceedToPay = confirm(`Your checkout total is $${totalDisplay}.\n\nProceed to payment and place the order?`);
+    if (!proceedToPay) {
+        return; // User cancelled the payment
+    }
+
     const payload = {
         user: { userId: currentUser.userId },
         items: cart.map(i => ({
@@ -136,6 +147,7 @@ document.getElementById('checkout-btn').addEventListener('click', async () => {
     };
 
     try {
+        // Step 1: Place the order to generate the Order ID
         const res = await fetch(`${API_BASE}/orders/place`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -144,7 +156,17 @@ document.getElementById('checkout-btn').addEventListener('click', async () => {
         const data = await safeJson(res);
         if (!res.ok) throw new Error(typeof data === 'object' ? (data.error || JSON.stringify(data)) : data);
 
-        showSuccess(`✅ Order #${data.orderId} placed! Total: $${data.totalAmount.toFixed(2)}`);
+        // Step 2: Automatically process the payment using the generated order ID
+        const payRes = await fetch(`${API_BASE}/payments/${data.orderId}/pay`, { method: 'POST' });
+        const payData = await safeJson(payRes);
+        
+        if (!payRes.ok) {
+            // If payment fails but order was placed
+            showError(`Order #${data.orderId} placed, but payment failed: ` + (typeof payData === 'object' ? payData.error : payData));
+        } else {
+            showSuccess(`✅ Order #${data.orderId} placed and paid! Total: $${data.totalAmount.toFixed(2)}`);
+        }
+
         saveCart([]);
         renderCartCount();
         renderCartDrawer();
@@ -214,9 +236,9 @@ async function loadOrderHistory() {
 document.getElementById('refresh-orders-btn').addEventListener('click', loadOrderHistory);
 
 // ─── Pay for Order ────────────────────────────────────────────────────────────
-window.payOrder = async function(orderId, amount) {
+window.payOrder = async function(orderId) {
     try {
-        const res = await fetch(`${API_BASE}/orders/${orderId}/pay?amount=${amount}`, { method: 'POST' });
+        const res = await fetch(`${API_BASE}/payments/${orderId}/pay`, { method: 'POST' });
         const data = await safeJson(res);
         if (!res.ok) throw new Error(typeof data === 'object' ? data.error : data);
         showSuccess(typeof data === 'string' ? data : 'Payment successful!');
